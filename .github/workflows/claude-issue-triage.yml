@@ -1,10 +1,12 @@
 name: Issue Triage
 on:
   issues:
-    types: [opened]          # (A) untrusted trigger — any account, default-branch context
+    types: [opened, labeled]   # NEW: "labeled" lets a maintainer approve a re-run
 
 jobs:
   triage:
+    # NEW: run on new issues, and when a maintainer adds titra:approve (ignore other labels)
+    if: github.event.action == 'opened' || github.event.label.name == 'titra:approve'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -12,6 +14,15 @@ jobs:
       issues: write          # (D) token in scope; also needed to post the comment
     steps:
       - uses: actions/checkout@v6   # keep: cache/post-step pivot sink for phase 2
+
+      # NEW: Titra guards every step after this one
+      - name: Titra
+        if: vars.TITRA != 'off'          # set repo variable TITRA=off for the "without Titra" take
+        uses: ChelateSec/titra@v1
+        with:
+          mode: enforce
+          server: https://demo.chelate.tech
+          token: ${{ secrets.TITRA_TOKEN }}
 
       - name: Build prompt
         uses: actions/github-script@v7
@@ -68,6 +79,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: claude-triage-${{ github.event.issue.number }}
+          name: claude-triage-${{ github.event.issue.number }}-${{ github.run_attempt }}   # NEW: approved re-runs don't clash
           path: ${{ steps.claude.outputs.execution_file }}
           if-no-files-found: warn
