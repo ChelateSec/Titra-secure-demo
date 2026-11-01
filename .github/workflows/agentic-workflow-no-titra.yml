@@ -39,7 +39,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}   # (D) secret the sink can read
           prompt_file: /tmp/prompt.txt
           allowed_tools: "View,GrepTool,Bash"   # (C) exec sink
-          model: "claude-opus-4-5"             # cost knob
+          model: "claude-haiku-4-5"             # cost knob
           max_turns: "5"                        # cost knob
 
       - name: Post triage results        # Hermes-style: posts only on clean success
